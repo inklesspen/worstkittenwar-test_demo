@@ -3,7 +3,9 @@ import transaction
 
 from pyramid import testing
 
-from .models import DBSession
+# Commenting this out because config.scan() will try to import this file.
+# However, the tests will still be broken, until we fix them.
+# from .models import DBSession
 
 
 class TestMyViewSuccessCondition(unittest.TestCase):

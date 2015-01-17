@@ -4,7 +4,6 @@ from pyramid.view import view_config
 from sqlalchemy.exc import DBAPIError
 
 from .models import (
-    DBSession,
     MyModel,
     )
 
@@ -12,7 +11,7 @@ from .models import (
 @view_config(route_name='home', renderer='templates/mytemplate.pt')
 def my_view(request):
     try:
-        one = DBSession.query(MyModel).filter(MyModel.name == 'one').first()
+        one = request.db_session.query(MyModel).filter(MyModel.name == 'one').first()
     except DBAPIError:
         return Response(conn_err_msg, content_type='text/plain', status_int=500)
     return {'one': one, 'project': 'kittenwar'}
