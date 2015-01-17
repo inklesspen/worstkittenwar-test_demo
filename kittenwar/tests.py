@@ -2,34 +2,27 @@ import unittest
 import transaction
 
 from pyramid import testing
-
-# Commenting this out because config.scan() will try to import this file.
-# However, the tests will still be broken, until we fix them.
-# from .models import DBSession
+from .models import MyModel, Base
 
 
 class TestMyViewSuccessCondition(unittest.TestCase):
     def setUp(self):
-        self.config = testing.setUp()
-        from sqlalchemy import create_engine
-        engine = create_engine('sqlite://')
-        from .models import (
-            Base,
-            MyModel,
-            )
-        DBSession.configure(bind=engine)
+        settings = {'sqlalchemy.url': 'sqlite:///:memory:'}
+        self.config = testing.setUp(settings=settings)
+        self.config.include('.models')
+        self.db_session = self.config.registry['db_sessionmaker']()
+        engine = self.db_session.bind
         Base.metadata.create_all(engine)
         with transaction.manager:
             model = MyModel(name='one', value=55)
-            DBSession.add(model)
+            self.db_session.add(model)
 
     def tearDown(self):
-        DBSession.remove()
         testing.tearDown()
 
     def test_passing_view(self):
         from .views import my_view
-        request = testing.DummyRequest()
+        request = testing.DummyRequest(db_session=self.db_session)
         info = my_view(request)
         self.assertEqual(info['one'].name, 'one')
         self.assertEqual(info['project'], 'kittenwar')
@@ -37,21 +30,16 @@ class TestMyViewSuccessCondition(unittest.TestCase):
 
 class TestMyViewFailureCondition(unittest.TestCase):
     def setUp(self):
-        self.config = testing.setUp()
-        from sqlalchemy import create_engine
-        engine = create_engine('sqlite://')
-        from .models import (
-            Base,
-            MyModel,
-            )
-        DBSession.configure(bind=engine)
+        settings = {'sqlalchemy.url': 'sqlite:///:memory:'}
+        self.config = testing.setUp(settings=settings)
+        self.config.include('.models')
+        self.db_session = self.config.registry['db_sessionmaker']()
 
     def tearDown(self):
-        DBSession.remove()
         testing.tearDown()
 
     def test_failing_view(self):
         from .views import my_view
-        request = testing.DummyRequest()
+        request = testing.DummyRequest(db_session=self.db_session)
         info = my_view(request)
         self.assertEqual(info.status_int, 500)
