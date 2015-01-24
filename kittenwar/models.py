@@ -1,8 +1,9 @@
 from sqlalchemy import (
     Column,
-    Index,
     Integer,
-    Text,
+    LargeBinary,
+    String,
+    Unicode,
     )
 
 from sqlalchemy.ext.declarative import declarative_base
@@ -15,13 +16,15 @@ from zope.sqlalchemy import register
 Base = declarative_base()
 
 
-class MyModel(Base):
-    __tablename__ = 'models'
+class Kitten(Base):
+    __tablename__ = 'kittens'
     id = Column(Integer, primary_key=True)
-    name = Column(Text)
-    value = Column(Integer)
-
-Index('my_index', MyModel.name, unique=True, mysql_length=255)
+    file_extension = Column(String(10), nullable=False)
+    file_data = Column(LargeBinary, nullable=False)
+    source_url = Column(String(120), nullable=False)
+    credit = Column(Unicode(40), nullable=False)
+    views = Column(Integer, nullable=False, default=0)
+    votes = Column(Integer, nullable=False, default=0)
 
 
 def includeme(config):
